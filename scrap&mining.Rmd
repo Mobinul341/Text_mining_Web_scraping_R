@@ -1,0 +1,121 @@
+--- 
+title: "A practical demonstration of text mining using R"
+author: "Md. Mobinul Islam"
+date: "13/11/2020"
+output:
+  html_notebook:
+    toc: yes
+  html_document:
+    toc: yes
+    df_print: paged
+  pdf_document:
+    toc: yes
+---
+
+# What is **Text Mining** ?
+
+**Text mining** is the process of exploring and analyzing large amounts of *unstructured text data* aided by software that can identify concepts, patterns, topics, keywords and other attributes in the data. It also known as **Text Analytics**.
+
+Text mining is similar in nature to **Data mining**, but with a focus on text instead of more structured forms of data. However, one of the first steps in the text mining process is to organize and structure the data in some fashion so it can be subjected to both qualitative and quantitative analysis.
+
+![This image is visualizing the key steps of  Text mining.](https://cdn.ttgtmedia.com/rms/onlineimages/business_analytics-text_mining_desktop.png)
+
+
+# What is **Web Scraping** ?
+**Web scraping** Web Scraping is a technique employed to extract large amounts of data from websites whereby the data is extracted and saved to a local file in your computer or to a database in table format.
+
+I have scraped a large amount of text data from a website
+[Nature.com](https://www.nature.com/).
+
+
+For Web scraping and data manipulation, I have used two R packages:- dplyr and rvest
+
+```{r}
+library(dplyr)
+library(rvest)
+```
+
+
+
+#**Target scraping site**
+
+In my project, I have selected to gather data on medical science articles/journals on Cancer. I searched on [Nature.com](https://www.nature.com/). 
+I have found plenty of data for scraping. 
+
+Specifically I have scraped cancer related articles. This is the URL
+https://www.nature.com/search?q=cancer
+
+First step of scraping is fetch from URL, here is the code to fetch URL
+
+```{r}
+#scraping target url
+link = "https://www.nature.com/search?q=cancer"
+pages = read_html(link)
+```
+
+
+If the url is valid, then next step to choose, how the data will extract in the desired format. Declare some variable, then choose the HTML, CSS tags and selectors by inspecting the browser
+
+![Inspect websites for specific HTML tags and CSS selectors](https://i.postimg.cc/X7jmmyZG/inspect.jpg)
+
+After data extraction, choose a data format to store the data. I have chosen to store it in .txt file. It is easier, cross-platform and faster than any other files.
+Before storing data into file, I convert it into a dataframe for next analysis.
+
+```{r}
+#Making a list to convert easily into dataframe, plyr is the library for Dataframe
+library(plyr)
+journ = list(titles, category, times)
+df<- ldply(journ, data.frame)
+
+#writing data into a txt file
+capture.output(journ, file = "cancer2.txt")
+```
+
+
+
+
+![Output in .txt file](https://i.postimg.cc/X7M16Hsz/cancer2txt.jpg)
+
+
+
+
+#**Text mining part**
+
+For text mining, I have used the most popular library *'quanteda'* and analysis the text I have used the library *'tm'*.
+
+First step is text mining is convert dataframe into corpus. Not whole dataframe, it converts single column. 
+
+```{r}
+#Converting dataframe into corpus
+df_corpus = Corpus((VectorSource(df$titles)))
+
+```
+
+
+Then the corpus will be analyzed through tm_map in these code steps. 
+
+```{r}
+df_corpus = tm_map(df_corpus, PlainTextDocument) #intermediate preprocessing
+df_corpus = tm_map(df_corpus, tolower) #converts all to lower case
+df_corpus = tm_map(df_corpus, removePunctuation) #removes puncuation
+df_corpus = tm_map(df_corpus, removeWords, stopwords("\n")) #removes common words
+df_corpus = tm_map(df_corpus, stemDocument) #removes last few similar letters
+```
+
+After stemDocument step, corpus can be converted into DocumentStemMatrix to removeSparseTerms for the final step.
+
+```{r}
+dftm = DocumentTermMatrix(df_corpus) #turns corpus into document term matrix
+not_sparse = removeSparseTerms(dftm, 0.99) #extract frequently
+```
+
+Finally the last stage of my analysis is to get the most frequent words in dataframe, one word per column. 
+
+```{r}
+final_words = as.data.frame(as.matrix(not_sparse)) 
+#most frequent words in dataframe, with one column per word
+```
+
+
+
+#**Thank You**
