@@ -51,6 +51,13 @@ First step of scraping is fetch from URL, here is the code to fetch URL
 #scraping target url
 link = "https://www.nature.com/search?q=cancer"
 pages = read_html(link)
+
+
+#scraping data using html css selectors
+titles = pages %>% html_nodes("h2 a") %>% html_text()
+journal_link = pages %>% html_nodes("h2 a") %>% html_attr("href") %>% paste("https://www.nature.com", ., sep = "")
+category = pages %>% html_nodes(".text-gray") %>% html_text()
+times = pages %>% html_nodes("time") %>% html_text()
 ```
 
 
